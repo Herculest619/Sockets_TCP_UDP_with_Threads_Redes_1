@@ -13,7 +13,7 @@ db_config = {
     'host': 'localhost',
     'user': 'root',
     'password': 'root',
-    'database': 'dispotivo'
+    'database': 'dispositivo'
 }
 
 db = mysql.connector.connect(**db_config)  # Conecta ao banco de dados
