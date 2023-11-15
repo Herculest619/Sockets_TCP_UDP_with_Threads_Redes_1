@@ -167,7 +167,7 @@ def on_new_conection_tcp(clientsocket,addr):
                     tvs = str(result)
                     # testa se a string esta vazia
                     if tvs == "[]":
-                        tvs = "Nenhuma tv encontrada!"
+                        tvs = "Nenhuma TV encontrada!"
                         print(tvs)
                         clientsocket.sendto(tvs.encode(), addr)
                     else:
@@ -187,6 +187,142 @@ def on_new_conection_tcp(clientsocket,addr):
                     else:
                         print('\nAr condicionado: ', ars)
                         clientsocket.sendto(ars.encode(), addr)
+
+                    ip_edit = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                    tipo_edit = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                    opcao_edit = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+
+                    print("\nIP: ", ip_edit)
+                    print("Tipo: ", tipo_edit)
+                    print("Opcao: ", opcao_edit)
+
+                    if ip_edit == "sem disp para alterar":
+                        print("\nNenhum dispositivo para alterar!")
+                        return
+                    else:
+                        if tipo_edit == "Lampada":
+                            if opcao_edit == "1":
+                                print("\nAlterando on/off da lampada...")
+                                on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                if on_off == "desligar":
+                                    sql = "UPDATE lampada SET status = 0, valor = 'off' WHERE IP = %s"
+                                else:
+                                    sql = "UPDATE lampada SET status = 1, valor = 'branco' WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Lampada alterada.")
+
+                            elif opcao_edit == "2":
+                                print("\nAlterando cor da lampada...")
+                                cor = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE lampada SET valor = %s WHERE IP = %s"
+                                val = (cor, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Lampada alterada.")
+
+                            elif opcao_edit == "3":
+                                print("\nAlterando apelido da lampada...")
+                                apelido = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE lampada SET apelido = %s WHERE IP = %s"
+                                val = (apelido, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Lampada alterada.")
+
+                            elif opcao_edit == "4":
+                                print("\nRemovendo lampada...")
+                                sql = "DELETE FROM lampada WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Lampada removida.")
+
+
+                        elif tipo_edit == "Televisao":
+                            if opcao_edit == "1":
+                                print("\nAlterando on/off da TV...")
+                                on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                if on_off == "desligar":
+                                    sql = "UPDATE tv SET status = 0, valor = 0 WHERE IP = %s"
+                                else:
+                                    sql = "UPDATE tv SET status = 1, valor = 50 WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("TV alterada.")
+
+                            elif opcao_edit == "2":
+                                print("\nAlterando volume da TV...")
+                                volume = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE tv SET valor = %s WHERE IP = %s"
+                                val = (volume, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("TV alterada.")
+
+                            elif opcao_edit == "3":
+                                print("\nAlterando apelido da TV...")
+                                apelido = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE tv SET apelido = %s WHERE IP = %s"
+                                val = (apelido, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("TV alterada.")
+
+                            elif opcao_edit == "4":
+                                print("\nRemovendo TV...")
+                                sql = "DELETE FROM tv WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("TV removida.")
+
+                        elif tipo_edit == "Ar-condicionado":
+                            if opcao_edit == "1":
+                                print("\nAlterando on/off do ar condicionado...")
+                                on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                if on_off == "desligar":
+                                    sql = "UPDATE ar_condicionado SET status = 0, valor = 0 WHERE IP = %s"
+                                else:
+                                    sql = "UPDATE ar_condicionado SET status = 1, valor = 25 WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Ar condicionado alterado.")
+
+                            elif opcao_edit == "2":
+                                print("\nAlterando temperatura do ar condicionado...")
+                                temperatura = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE ar_condicionado SET valor = %s WHERE IP = %s"
+                                val = (temperatura, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Ar condicionado alterado.")
+
+                            elif opcao_edit == "3":
+                                print("\nAlterando apelido do ar condicionado...")
+                                apelido = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                sql = "UPDATE ar_condicionado SET apelido = %s WHERE IP = %s"
+                                val = (apelido, ip_edit)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Ar condicionado alterado.")
+
+                            elif opcao_edit == "4":
+                                print("\nRemovendo ar condicionado...")
+                                sql = "DELETE FROM ar WHERE IP = %s"
+                                val = (ip_edit,)
+                                cursor.execute(sql, val)
+                                db.commit()
+                                print("Ar condicionado removido.")
+
+                    # print("\nDispositivo alterado com sucesso!")
+                    #envia mensagem de sucesso
+                    mensagem = "Sucesso!"
+                    clientsocket.sendto(mensagem.encode(), addr)
+
 
                 except Exception as error:
                     print(error)

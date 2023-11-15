@@ -81,16 +81,213 @@ def main(argv):
                     if lampadas == "Nenhuma lampada encontrada!":
                         qnt_lampadas = 0
                     else:
-                        print('\nLampadas: ', lampadas)
+                        # Convertendo a string para lista
+                        lampadas_tupla = ast.literal_eval(lampadas)
+                        qnt_lampadas = len(lampadas_tupla)
 
                     tvs = s.recv(BUFFER_SIZE).decode('utf-8')
-                    print('\nTVs: ', tvs)
+                    if tvs == "Nenhuma TV encontrada!":
+                        qnt_tvs = 0
+                    else:
+                        # Convertendo a string para lista
+                        tvs_tupla = ast.literal_eval(tvs)
+                        qnt_tvs = len(tvs_tupla)
 
                     ars = s.recv(BUFFER_SIZE).decode('utf-8')
-                    print('\nAr condicionado: ', ars)
+                    if ars == "Nenhum ar condicionado encontrado!":
+                        qnt_ars = 0
+                    else:
+                        # Convertendo a string para lista
+                        ars_tupla = ast.literal_eval(ars)
+                        qnt_ars = len(ars_tupla)
 
+                    if qnt_ars == 0 and qnt_lampadas == 0 and qnt_tvs == 0:
+                        print("\nNENHUM DISPOSITIVO CADASTRADO!")
+                        s.send("sem disp para alterar".encode())
+                        s.send("sem disp para alterar".encode())
+                        s.send("sem disp para alterar".encode())
+                        input("\nPressione qualquer tecla para continuar...")
+                        main(sys.argv[1:])
+                        return
+                    else:
+                        print("\n")
+                        print("*"*50)
+                        print("TOTAL DE DISPOSITIVOS CADASTRADOS: ", qnt_ars + qnt_lampadas + qnt_tvs)
+                        print("*"*50)
+
+                        var = 1
+                        print("\nLAMPADAS CADASTRADAS:")
+                        if qnt_lampadas > 0:
+                            for i in lampadas_tupla:
+                                if len(i) == 5:
+                                    status = "Ligado" if i[3] == 1 else "Desligado"
+                                    print("ID:", var,"----> IP:", i[0], " Porta:", i[1], " Valor:", i[2], " Status:", status, " Apelido:", i[4])
+                                else:
+                                    print("Tupla inválida: ", i)
+                                var += 1
+                        else:
+                            print("\nNenhuma lampada cadastrada!")
+                        
+                        print("\nTVs CADASTRADAS:")
+                        if qnt_tvs > 0:
+                            #impime as tvs cadastradas em listas
+                            for i in tvs_tupla:
+                                if len(i) == 5:
+                                    status = "Ligado" if i[3] == 1 else "Desligado"
+                                    print("ID:", var,"----> IP:", i[0], " Porta:", i[1], " Valor:", i[2], " Status:", status, " Apelido:", i[4])
+                                else:
+                                    print("Tupla inválida: ", i)
+                                var += 1
+                        else:
+                            print("Nenhuma TV cadastrada!")
+
+                        print("\nARs CADASTRADOS:")
+                        if qnt_ars > 0:
+                            for i in ars_tupla:
+                                status = "Ligado" if i[3] == 1 else "Desligado"
+                                if len(i) == 5:
+                                    print("ID:", var,"----> IP:", i[0], " Porta:", i[1], " Valor:", i[2], " Status:", status, " Apelido:", i[4])
+                                else:
+                                    print("Tupla inválida: ", i)
+                                var += 1
+                        else:
+                            print("Nenhum ar condicionado cadastrado!")
+
+                        print("\n" + "*"*50)
+
+                        try:
+                            id_alteracao = int(input("\nDigite o ID do dispositivo que deseja alterar: "))
+                        except:
+                            print("\nID inválido!")
+                            input("\nPressione qualquer tecla para continuar...")
+                            main(sys.argv[1:])
+                            return
+                        
+                        if id_alteracao > var or id_alteracao < 0:
+                            print("\nID inválido!")
+                            input("\nPressione qualquer tecla para continuar...")
+                            main(sys.argv[1:])
+                            return
+                        else:
+                            aux = 1
+                            if qnt_lampadas > 0:
+                                for i in lampadas_tupla:
+                                    if aux == id_alteracao:
+                                        print("aux: ", aux)
+                                        ipaux = i[0]
+                                        tipo = "Lampada"
+                                        status_aux = i[3]
+                                    aux += 1
+                                
+                            if qnt_tvs > 0:
+                                for i in tvs_tupla:
+                                    if aux == id_alteracao:
+                                        print("aux: ", aux)
+                                        ipaux = i[0]
+                                        tipo = "Televisao"
+                                        status_aux = i[3]
+                                    aux += 1
+
+                            if qnt_ars > 0:
+                                for i in ars_tupla:
+                                    if aux == id_alteracao:
+                                        print("aux: ", aux)
+                                        ipaux = i[0]
+                                        tipo = "Ar-condicionado"
+                                        status_aux = i[3]
+                                    aux += 1
+
+                            print("\n" + tipo + " selecionado com o IP: " + ipaux)
+                            s.send(ipaux.encode())
+                            s.send(tipo.encode())
+
+                            print("\nO QUE DESEJA ALTERAR?")
+                            print("\n1 - Ligar/Desligar")
+                            if tipo == "Lampada":
+                                print("2 - Alterar cor")
+                            elif tipo == "Televisao":
+                                print("2 - Alterar volume")
+                            elif tipo == "Ar-condicionado":
+                                print("2 - Alterar temperatura")
+                            print("3 - Alterar apelido")
+                            print("4 - Excluir dispositivo")
+
+                            opcao_alteracao = input("\nDigite a opção desejada: ")
+                            s.send(opcao_alteracao.encode())
+
+                            if opcao_alteracao == "1":
+                                #verifica o status atual do dispositivo
+                                if status_aux == 1:
+                                    print("\nDesligando o dispositivo...")
+                                    s.send("desligar".encode())
+                                else:
+                                    print("\nLigando o dispositivo...")
+                                    s.send("ligar".encode())
+
+                            elif opcao_alteracao == "2":
+                                if tipo == "Lampada":
+                                    print("\nALTERAR COR!")
+                                    cor = input("\nAzul, Vermelho ou Verde: ")
+                                    s.send(cor.encode())
+                                elif tipo == "Televisao":
+                                    print("\nALTERAR VOLUME!")
+                                    volume = input("\nDigite o volume desejado: ")
+                                    #testa se o volume é um numero inteiro entre 0 e 100    
+                                    try:
+                                        volume = int(volume)
+                                        if volume < 0 or volume > 100:
+                                            volume = -1
+                                            print("\nVolume inválido!")
+                                            input("\nPressione qualquer tecla para continuar...")
+                                            main(sys.argv[1:])
+                                            return
+                                    except:
+                                        print("\nVolume inválido!")
+                                        input("\nPressione qualquer tecla para continuar...")
+                                        main(sys.argv[1:])
+                                        return
+                                    volume = str(volume)
+                                    s.send(volume.encode())
+                                elif tipo == "Ar-condicionado":
+                                    print("\nALTERAR TEMPERATURA!")
+                                    s.send("alterar temperatura".encode())
+                                    temperatura = input("\nDigite a temperatura desejada: (16~30)")
+                                    #testa se a temperatura é um numero inteiro entre 16 e 30
+                                    try:
+                                        temperatura = int(temperatura)
+                                        if temperatura < 16 or temperatura > 30:
+                                            temperatura = -1
+                                            print("\nTemperatura inválida!")
+                                            input("\nPressione qualquer tecla para continuar...")
+                                            main(sys.argv[1:])
+                                            return
+                                    except:
+                                        print("\nTemperatura inválida!")
+                                        input("\nPressione qualquer tecla para continuar...")
+                                        main(sys.argv[1:])
+                                        return
+                                    temperatura = str(temperatura)
+                                    s.send(temperatura.encode())
+
+                            elif opcao_alteracao == "3":
+                                print("\nALTERAR APELIDO!")
+                                apelido = input("\nDigite o novo apelido: ")
+                                s.send(apelido.encode())
+
+                            elif opcao_alteracao == "4":
+                                print("\nEXCLUIR DISPOSITIVO!")
+
+                            else:
+                                print("\nOpção inválida!")
+                                input("\nPressione qualquer tecla para continuar...")
+                                main(sys.argv[1:])
+                                return
+                    mensagem = s.recv(BUFFER_SIZE).decode('utf-8')
+                    print(mensagem)
                     input("\nPressione qualquer tecla para continuar...")
-
+                    main(sys.argv[1:])
+                    return
+                
                 elif(opcao == "3"):
                     print("\nSaindo do sistema...")
                     s.send("sair".encode())
@@ -100,15 +297,9 @@ def main(argv):
                 else:
                     print("\nOpção inválida!")
                     input("\nPressione qualquer tecla para continuar...")
+                    main(sys.argv[1:])
+                    return
 
-                '''data = s.recv(BUFFER_SIZE) #recebe os dados do servidor
-                texto_recebido = repr(data) #converte de bytes para um formato "printável"
-                print('\nRecebido do servidor', texto_recebido) #imprime o texto recebido
-                texto_string = data.decode('utf-8') #converte os bytes em string
-                if (texto_string == 'bye'):
-                    print('\nvai encerrar o socket cliente!')
-                    s.close()
-                    break'''
     except Exception as error:
         print("\nExceção - Programa será encerrado!")
         print(error)

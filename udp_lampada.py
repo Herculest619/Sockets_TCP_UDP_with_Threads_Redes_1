@@ -1,6 +1,6 @@
 import socket, sys, os
 
-HOST = '127.0.0.19'  # endereço IP Localhost
+HOST = '127.0.0.12'  # endereço IP Localhost
 #HOST = '192.168.2.27'  # endereço IP
 PORT = 20002        # Porta utilizada pelo servidor
 BUFFER_SIZE = 1024  # tamanho do buffer para recepção dos dados
