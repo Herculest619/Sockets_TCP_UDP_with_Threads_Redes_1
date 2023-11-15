@@ -39,10 +39,13 @@ def discover_server():
     udp_socket.sendto(message.encode(), (broadcast_address, 20002))
 '''
 
-def send_data_to_server(data, server_ip, port):
+def send_data_to_server(valor, status, server_ip, port):
     try:
         udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_socket.sendto(data.encode(), (server_ip, port))
+        udp_socket.sendto("alterar".encode(), (server_ip, port))
+        udp_socket.sendto(valor.encode(), (server_ip, port))
+        udp_socket.sendto(str(status).encode(), (server_ip, port))
+        print("\nDados enviados para o servidor")
         udp_socket.close()
     except Exception as error:
         print("\nErro ao enviar dados para o servidor")
@@ -64,7 +67,52 @@ def scanIP():
                 UDPClientSocket.settimeout(1.0)  # Tempo de espera para resposta do servidor
                 # Envia texto para o servidor
                 UDPClientSocket.sendto("conectar".encode(), (addr, 20002))
+                msg = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                if msg == "lampada" or msg == "tv" or msg == "ar_condicionado":
+                    valor = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                    status = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                    print(msg, "encontrado no IP:", addr)
+                    ips.append([addr, msg, valor, status])  # Adiciona o IP à lista
 
+            UDPClientSocket.close()
+
+        except Exception as error:
+            if error.errno != 10054:
+                print(error, addr)
+            # Se houver uma exceção, ela será tratada e o loop continuará
+
+    for ip in range(1, 255):
+        addr = '127.0.0.' + str(ip)
+
+        try:
+            # with fecha o socket ao final, AF_INET: indica o protocolo IPv4. SOCK_STREAM: tipo de socket para TCP
+            with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as UDPClientSocket:
+                UDPClientSocket.settimeout(1.0)  # Tempo de espera para resposta do servidor
+                # Envia texto para o servidor
+                UDPClientSocket.sendto("conectar".encode(), (addr, 20003))
+                msg = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                if msg == "lampada" or msg == "tv" or msg == "ar_condicionado":
+                    valor = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                    status = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
+                    print(msg, "encontrado no IP:", addr)
+                    ips.append([addr, msg, valor, status])  # Adiciona o IP à lista
+
+            UDPClientSocket.close()
+
+        except Exception as error:
+            if error.errno != 10054:
+                print(error, addr)
+            # Se houver uma exceção, ela será tratada e o loop continuará
+
+    for ip in range(1, 255):
+        addr = '127.0.0.' + str(ip)
+
+        try:
+            # with fecha o socket ao final, AF_INET: indica o protocolo IPv4. SOCK_STREAM: tipo de socket para TCP
+            with socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM) as UDPClientSocket:
+                UDPClientSocket.settimeout(1.0)  # Tempo de espera para resposta do servidor
+                # Envia texto para o servidor
+                UDPClientSocket.sendto("conectar".encode(), (addr, 20004))
                 msg = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
                 
                 if msg == "lampada" or msg == "tv" or msg == "ar_condicionado":
@@ -72,6 +120,7 @@ def scanIP():
                     status = UDPClientSocket.recvfrom(BUFFER_SIZE)[0].decode('utf-8')
                     print(msg, "encontrado no IP:", addr)
                     ips.append([addr, msg, valor, status])  # Adiciona o IP à lista
+
             UDPClientSocket.close()
 
         except Exception as error:
@@ -115,6 +164,24 @@ def on_new_conection_tcp(clientsocket,addr):
                                 ips_dis.remove(j)
                                 print("\nRemovendo ip: ", j[0])
 
+                    sql = "SELECT IP FROM tv"
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    for i in result:
+                        for j in ips_dis:
+                            if i[0] == j[0]:
+                                ips_dis.remove(j)
+                                print("\nRemovendo ip: ", j[0])
+
+                    sql = "SELECT IP FROM ar_condicionado"
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    for i in result:
+                        for j in ips_dis:
+                            if i[0] == j[0]:
+                                ips_dis.remove(j)
+                                print("\nRemovendo ip: ", j[0])
+
                     print("\nResultado após comparar com BD: ", ips_dis)
                     if ips_dis == []:
                         print("\nNenhum dispositivo encontrado!")
@@ -128,13 +195,32 @@ def on_new_conection_tcp(clientsocket,addr):
                     apelido = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
 
                     try:
-                        sql = "INSERT INTO lampada (IP, porta, valor, status, apelido) VALUES (%s, %s, %s, %s, %s)"
-                        val = (ips_dis[id][0], 20002, ips_dis[id][2], ips_dis[id][3], apelido)
-                        cursor.execute(sql, val)
-                        db.commit()
-                        print("lampada inserida.")
-                        mensagem =  "lampada " + apelido +" inserida."
-                        clientsocket.sendto(mensagem.encode(), addr)
+                        if ips_dis[id][1] == "lampada":
+                            sql = "INSERT INTO lampada (IP, porta, valor, status, apelido) VALUES (%s, %s, %s, %s, %s)"
+                            val = (ips_dis[id][0], 20002, ips_dis[id][2], ips_dis[id][3], apelido)
+                            cursor.execute(sql, val)
+                            db.commit()
+                            print("lampada inserida.")
+                            mensagem =  "lampada " + apelido +" inserida."
+                            clientsocket.sendto(mensagem.encode(), addr)
+
+                        elif ips_dis[id][1] == "tv":
+                            sql = "INSERT INTO tv (IP, porta, valor, status, apelido) VALUES (%s, %s, %s, %s, %s)"
+                            val = (ips_dis[id][0], 20003, ips_dis[id][2], ips_dis[id][3], apelido)
+                            cursor.execute(sql, val)
+                            db.commit()
+                            print("Televisao inserida.")
+                            mensagem =  "Televisao " + apelido +" inserida."
+                            clientsocket.sendto(mensagem.encode(), addr)
+
+                        elif ips_dis[id][1] == "ar_condicionado":
+                            sql = "INSERT INTO ar_condicionado (IP, porta, valor, status, apelido) VALUES (%s, %s, %s, %s, %s)"
+                            val = (ips_dis[id][0], 20004, ips_dis[id][2], ips_dis[id][3], apelido)
+                            cursor.execute(sql, val)
+                            db.commit()
+                            print("Ar condicionado inserido.")
+                            mensagem =  "Ar condicionado " + apelido +" inserido."
+                            clientsocket.sendto(mensagem.encode(), addr)
                     except Exception as error:
                         # se ja existir, cancela a inserção, e avisa o usuário que o dispositivo já está cadastrado
                         if error.errno == 1062:
@@ -206,8 +292,10 @@ def on_new_conection_tcp(clientsocket,addr):
                                 on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
                                 if on_off == "desligar":
                                     sql = "UPDATE lampada SET status = 0, valor = 'off' WHERE IP = %s"
+                                    send_data_to_server("off", 0, ip_edit, 20002)
                                 else:
                                     sql = "UPDATE lampada SET status = 1, valor = 'branco' WHERE IP = %s"
+                                    send_data_to_server("branco", 1, ip_edit, 20002)
                                 val = (ip_edit,)
                                 cursor.execute(sql, val)
                                 db.commit()
@@ -216,6 +304,7 @@ def on_new_conection_tcp(clientsocket,addr):
                             elif opcao_edit == "2":
                                 print("\nAlterando cor da lampada...")
                                 cor = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                send_data_to_server(cor, 1, ip_edit, 20002)
                                 sql = "UPDATE lampada SET valor = %s WHERE IP = %s"
                                 val = (cor, ip_edit)
                                 cursor.execute(sql, val)
@@ -246,8 +335,10 @@ def on_new_conection_tcp(clientsocket,addr):
                                 on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
                                 if on_off == "desligar":
                                     sql = "UPDATE tv SET status = 0, valor = 0 WHERE IP = %s"
+                                    send_data_to_server("0", 0, ip_edit, 20002)
                                 else:
                                     sql = "UPDATE tv SET status = 1, valor = 50 WHERE IP = %s"
+                                    send_data_to_server("50", 1, ip_edit, 20002)
                                 val = (ip_edit,)
                                 cursor.execute(sql, val)
                                 db.commit()
@@ -256,6 +347,7 @@ def on_new_conection_tcp(clientsocket,addr):
                             elif opcao_edit == "2":
                                 print("\nAlterando volume da TV...")
                                 volume = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                send_data_to_server(volume, 1, ip_edit, 20002)
                                 sql = "UPDATE tv SET valor = %s WHERE IP = %s"
                                 val = (volume, ip_edit)
                                 cursor.execute(sql, val)
@@ -285,8 +377,10 @@ def on_new_conection_tcp(clientsocket,addr):
                                 on_off = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
                                 if on_off == "desligar":
                                     sql = "UPDATE ar_condicionado SET status = 0, valor = 0 WHERE IP = %s"
+                                    send_data_to_server("0", 0, ip_edit, 20002)
                                 else:
                                     sql = "UPDATE ar_condicionado SET status = 1, valor = 25 WHERE IP = %s"
+                                    send_data_to_server("25", 1, ip_edit, 20002)
                                 val = (ip_edit,)
                                 cursor.execute(sql, val)
                                 db.commit()
@@ -295,6 +389,7 @@ def on_new_conection_tcp(clientsocket,addr):
                             elif opcao_edit == "2":
                                 print("\nAlterando temperatura do ar condicionado...")
                                 temperatura = clientsocket.recv(BUFFER_SIZE).decode('utf-8')
+                                send_data_to_server(temperatura, 1, ip_edit, 20002)
                                 sql = "UPDATE ar_condicionado SET valor = %s WHERE IP = %s"
                                 val = (temperatura, ip_edit)
                                 cursor.execute(sql, val)

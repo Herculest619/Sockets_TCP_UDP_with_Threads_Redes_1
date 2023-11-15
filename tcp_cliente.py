@@ -228,6 +228,7 @@ def main(argv):
                                 if tipo == "Lampada":
                                     print("\nALTERAR COR!")
                                     cor = input("\nAzul, Vermelho ou Verde: ")
+                                    
                                     s.send(cor.encode())
                                 elif tipo == "Televisao":
                                     print("\nALTERAR VOLUME!")

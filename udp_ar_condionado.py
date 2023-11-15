@@ -1,12 +1,12 @@
 import socket, sys, os
 
-HOST = '127.0.0.14'  # endereço IP Localhost
+HOST = '127.0.0.214'  # endereço IP Localhost
 #HOST = '192.168.2.27'  # endereço IP
-PORT = 20002        # Porta utilizada pelo servidor
+PORT = 20004        # Porta utilizada pelo servidor
 BUFFER_SIZE = 1024  # tamanho do buffer para recepção dos dados
 
 def main(argv):
-    valor = "branco"
+    valor = "25"
     status = 1
 
     try:
@@ -15,7 +15,7 @@ def main(argv):
         UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # Bind to address and ip
         UDPServerSocket.bind((HOST, PORT))
-        print("\nLampada UDP server up and listening")
+        print("\nAr condicionado UDP server up and listening")
         # Listen for incoming datagrams
         while(True):
             bytesAddressPair = UDPServerSocket.recvfrom(BUFFER_SIZE) #recebe os dados do cliente
@@ -30,13 +30,13 @@ def main(argv):
             # UDPServerSocket.sendto(mensagem, endereco)
 
             if(mensagem == "conectar"):
-                print("\nConectando a lampada...")
-                UDPServerSocket.sendto("lampada".encode(), endereco)
+                print("\nConectando o Ar condicionado...")
+                UDPServerSocket.sendto("ar_condicionado".encode(), endereco)
                 UDPServerSocket.sendto(valor.encode(), endereco)
                 UDPServerSocket.sendto(str(status).encode(), endereco)
 
             elif(mensagem == "alterar"):
-                print("\nAlterando as configurações da lampada...")
+                print("\nAlterando as configurações do Ar condicionado...")
                 valor = UDPServerSocket.recvfrom(BUFFER_SIZE)[0].decode()
                 print("Valor: ", valor) 
                 status = UDPServerSocket.recvfrom(BUFFER_SIZE)[0].decode()                
