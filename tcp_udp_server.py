@@ -19,7 +19,7 @@ db_config = {
 db = mysql.connector.connect(**db_config)  # Conecta ao banco de dados
 cursor = db.cursor()  # Cria um cursor para executar comandos SQL
 
-#Prototipo de descoberta de dispositivos
+#Prototipo de descoberta de dispositivos com broadcast
 '''
 def discover_server():
     # Configuração do socket
@@ -76,7 +76,7 @@ def scanIP():
 
         except Exception as error:
             if error.errno != 10054:
-                print(error, ip)
+                print(error, addr)
             # Se houver uma exceção, ela será tratada e o loop continuará
 
     # Retorna a lista com os IPs encontrados
@@ -94,13 +94,12 @@ def on_new_conection_tcp(clientsocket,addr):
 
             if (texto_recebido == 'cadastrar'):
                 print("\nCADASTRAR NOVO DISPOSITIVO!")
-                # ip_dispositivo = input("\nDigite o IP do dispositivo: ")
 
                 ips_dis = scanIP()
 
                 if ips_dis == []:
                     print("\nNenhum dispositivo encontrado!")
-                    clientsocket.sendto("\nNenhum dispositivo encontrado!".encode(), addr)
+                    clientsocket.sendto("Nenhum dispositivo encontrado!".encode(), addr)
                     return
                 else:
                     print("\nDispositivos encontrados: ")
@@ -134,6 +133,8 @@ def on_new_conection_tcp(clientsocket,addr):
                         cursor.execute(sql, val)
                         db.commit()
                         print("lampada inserida.")
+                        mensagem =  "lampada " + apelido +" inserida."
+                        clientsocket.sendto(mensagem.encode(), addr)
                     except Exception as error:
                         # se ja existir, cancela a inserção, e avisa o usuário que o dispositivo já está cadastrado
                         if error.errno == 1062:
@@ -144,8 +145,54 @@ def on_new_conection_tcp(clientsocket,addr):
 
                 
             elif(texto_recebido == "listar"):
-                print("\nListando os dispositivos conectados...")
-                # clientsocket.send('teste123'.encode('utf-8'))
+                try:
+                    print("\nListando os dispositivos conectados...")
+                    
+                    sql = "SELECT * FROM lampada"
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    lampadas = str(result)
+                    #testa se a string esta vazia
+                    if lampadas == "[]":
+                        lampadas = "Nenhuma lampada encontrada!"
+                        print(lampadas)
+                        clientsocket.sendto(lampadas.encode(), addr)
+                    else:
+                        print('\nLampadas: ', lampadas)
+                        clientsocket.sendto(lampadas.encode(), addr)
+
+                    sql = "SELECT * FROM tv"
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    tvs = str(result)
+                    # testa se a string esta vazia
+                    if tvs == "[]":
+                        tvs = "Nenhuma tv encontrada!"
+                        print(tvs)
+                        clientsocket.sendto(tvs.encode(), addr)
+                    else:
+                        print('\nTVs: ', tvs)
+                        clientsocket.sendto(tvs.encode(), addr)
+
+                    sql = "SELECT * FROM ar_condicionado"
+                    cursor.execute(sql)
+                    result = cursor.fetchall()
+                    ars = str(result)
+
+                    # testa se a string esta vazia
+                    if ars == "[]":
+                        ars = "Nenhum ar condicionado encontrado!"
+                        print(ars)
+                        clientsocket.sendto(ars.encode(), addr)
+                    else:
+                        print('\nAr condicionado: ', ars)
+                        clientsocket.sendto(ars.encode(), addr)
+
+                except Exception as error:
+                    print(error)
+                    return
+
+
             elif(texto_recebido == "desconectar"):
                 print("\nDesconectando dispositivo...")
                 clientsocket.close()

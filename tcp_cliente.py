@@ -68,12 +68,28 @@ def main(argv):
                         apelido = input("\nDigite o apelido do dispositivo: ")
                         s.send(apelido.encode())
 
+                        msg = s.recv(BUFFER_SIZE).decode('utf-8')
+                        print(msg)
+                        input("\nPressione qualquer tecla para continuar...")
+
                 elif(opcao == "2"):
                     print("\nListando os dispositivos conectados...")
                     s.send("listar".encode())
-                    data = s.recv(BUFFER_SIZE)
-                    texto_recebido = repr(data)
-                    print('\nRecebido do servidor', texto_recebido)
+
+                    lampadas = s.recv(BUFFER_SIZE).decode('utf-8')
+                    #testa se a string esta vazia
+                    if lampadas == "Nenhuma lampada encontrada!":
+                        qnt_lampadas = 0
+                    else:
+                        print('\nLampadas: ', lampadas)
+
+                    tvs = s.recv(BUFFER_SIZE).decode('utf-8')
+                    print('\nTVs: ', tvs)
+
+                    ars = s.recv(BUFFER_SIZE).decode('utf-8')
+                    print('\nAr condicionado: ', ars)
+
+                    input("\nPressione qualquer tecla para continuar...")
 
                 elif(opcao == "3"):
                     print("\nSaindo do sistema...")
