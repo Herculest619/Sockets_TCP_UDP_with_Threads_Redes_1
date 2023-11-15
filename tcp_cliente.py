@@ -1,4 +1,4 @@
-import socket, sys, os
+import socket, sys, os, ast
 
 HOST = '127.0.0.1'  # endereço IP Localhost
 #HOST = '192.168.2.27'  # endereço IP
@@ -7,6 +7,9 @@ BUFFER_SIZE = 1024  # tamanho do buffer para recepção dos dados
 
 
 def main(argv): 
+    #limpa a tela do cmd no windows
+    os.system('cls' if os.name == 'nt' else 'clear')
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: #with fecha o socket ao final, AF_INET: indica o protocolo IPv4. SOCK_STREAM: tipo de socket para TCP
             s.connect((HOST, PORT_TCP)) #conecta ao servidor
@@ -37,17 +40,47 @@ def main(argv):
                 if(opcao == "1"):
                     print("\nCADASTRAR NOVO DISPOSITIVO!")
                     s.send("cadastrar".encode())
+                    data = s.recv(BUFFER_SIZE).decode('utf-8')
+
+                    #conferir se a string esta vazia
+                    if data == "Nenhum dispositivo encontrado!":
+                        print(data)
+                        input("\nPressione qualquer tecla para continuar...")
+                        main(sys.argv[1:])
+                        return
+
+                    else:
+                        # Convertendo a string para lista
+                        data_tupla = ast.literal_eval(data)
+                        print(type(data_tupla))
+
+                        j = 0
+                        for i in data_tupla:
+                            if len(i) == 4:
+                                print("\nID: ", j,"----> IP: ", i[0], " Tipo: ", i[1], " Valor: ", i[2], " Status: ", i[3])
+                            else:
+                                print("Tupla inválida: ", i)
+                            j += 1
+
+                        id = input("\nDigite o ID dispositivo que deseja cadastrar: ")
+                        s.send(id.encode())
+
+                        apelido = input("\nDigite o apelido do dispositivo: ")
+                        s.send(apelido.encode())
+
                 elif(opcao == "2"):
                     print("\nListando os dispositivos conectados...")
                     s.send("listar".encode())
                     data = s.recv(BUFFER_SIZE)
                     texto_recebido = repr(data)
                     print('\nRecebido do servidor', texto_recebido)
+
                 elif(opcao == "3"):
                     print("\nSaindo do sistema...")
                     s.send("sair".encode())
                     s.close()
                     break
+
                 else:
                     print("\nOpção inválida!")
                     input("\nPressione qualquer tecla para continuar...")
