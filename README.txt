@@ -2,6 +2,7 @@ Aplicação de Interação entre Cliente e Dispositivos com Servidor Intermediá
 Este projeto utiliza conceitos de TCP/IP, UDP/IP, Banco de Dados e Threads para facilitar a interação entre clientes e dispositivos por meio de um servidor intermediário.
 
 ## Vídeo no youtube: 
+https://youtu.be/wr23oIbEfsM
 
 ## Banco de Dados
 1. Certifique-se de que o MySQL está instalado na máquina onde o servidor será executado.

@@ -52,7 +52,6 @@ def main(argv):
                     else:
                         # Convertendo a string para lista
                         data_tupla = ast.literal_eval(data)
-                        print(type(data_tupla))
 
                         j = 0
                         for i in data_tupla:
